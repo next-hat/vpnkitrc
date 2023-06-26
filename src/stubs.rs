@@ -27,10 +27,11 @@ pub struct VpnKitError {
 ///
 /// Protocol to use for port forwarding
 ///
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum VpnKitProtocol {
   /// TCP
+  #[default]
   TCP,
   /// UDP
   UDP,
@@ -38,11 +39,21 @@ pub enum VpnKitProtocol {
   UNIX,
 }
 
+impl std::fmt::Display for VpnKitProtocol {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      VpnKitProtocol::TCP => write!(f, "TCP"),
+      VpnKitProtocol::UDP => write!(f, "UDP"),
+      VpnKitProtocol::UNIX => write!(f, "UNIX"),
+    }
+  }
+}
+
 /// ## Port
 ///
 /// A port forward definition
 ///
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct VpnKitPort {
   /// Port number to listen on
   #[serde(skip_serializing_if = "Option::is_none")]
