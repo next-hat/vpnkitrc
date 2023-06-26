@@ -12,6 +12,7 @@ repository = "https://github.com/nxthat/vpnkitrc"
 bench = false
 
 [features]
+default = ["tokio"]
 tokio = ["ntex/tokio"]
 glommio = ["ntex/glommio"]
 async-std = ["ntex/async-std"]
