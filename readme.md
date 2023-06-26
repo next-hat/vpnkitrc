@@ -29,10 +29,6 @@ I started this project to make [Nanocl](https://github.com/nxthat/nanocl) compat
 
 ## 📋 Requirements
 
-Has said before `Vpnkitrc` is just a client to interact with [`Vpnkit`] the best use case is when you have [`Docker Desktop`] installed.
-
-So you will need:
-
 - [`Rust`] 1.70.0+
 - [`Docker Desktop`]
 
@@ -44,6 +40,12 @@ It's a [`Rust`] crates based on [`Ntex`] Http Client so you can install it with 
 cargo add vpnkitrc --features tokio
 ```
 
+Available features are:
+
+- `tokio`
+- `glommio`
+- `async-std`
+
 ## 📚 Documentation
 
 - [`example`]
@@ -54,5 +56,4 @@ cargo add vpnkitrc --features tokio
 [`Docker Desktop`]: https://www.docker.com/products/docker-desktop
 [`Ntex`]: https://ntex.rs
 [`docs.rs`]: https://docs.rs/vpnkitrc/0.1.0/vpnkitrc
-
-[`example`](./example/)
+[`example`]: ./example/

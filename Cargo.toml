@@ -2,8 +2,8 @@
 name = "vpnkitrc"
 version = "0.1.0"
 edition = "2021"
-authors = ["next hat team <team@next-hat.com>"]
-description = "VPNKitRC is a Rust library for interacting with VPNKit."
+authors = ["NextHat Team <team@next-hat.com>"]
+description = "Rust library for interacting with VPNKit."
 readme = "readme.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/nxthat/vpnkitrc"
