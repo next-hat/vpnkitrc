@@ -247,9 +247,9 @@ dependencies = [
 
 [[package]]
 name = "base64"
-version = "0.21.5"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35636a1494ede3b646cc98f74f8e62c773a38a659ebc777a2cf26b9b74171df9"
+checksum = "9475866fec1451be56a3c2400fd081ff546538961565ccb5b7142cbd22bc7a51"
 
 [[package]]
 name = "bitflags"
@@ -939,9 +939,9 @@ dependencies = [
 
 [[package]]
 name = "ntex"
-version = "1.1.0"
+version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "459affa3ce5e34ad01588f6bb090a13a334de1633d228653abe662af6b8bf21b"
+checksum = "9dfc244dc13f056ae4390c23a00554be4cc6efcb7cf5c126c2230fef5e74bcc1"
 dependencies = [
  "async-channel 2.1.0",
  "base64",
@@ -1053,9 +1053,9 @@ dependencies = [
 
 [[package]]
 name = "ntex-h2"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d7eee598e3b94175cef2f8c3818b61460307be543f2d9132aac36ac8d78f3d5"
+checksum = "dd9c4a3170f7f6e628fd5271e55f95df615664814f7ca6c868421fc2b06fbf40"
 dependencies = [
  "bitflags 2.4.1",
  "fxhash",
