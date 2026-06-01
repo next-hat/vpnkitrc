@@ -1,4 +1,4 @@
-use ntex::http;
+use ntex::client;
 use serde::{Serialize, Deserialize};
 
 /// ## VpnKit Client
@@ -10,7 +10,7 @@ pub struct VpnKitRc {
   /// Base URL for the API
   pub base_url: String,
   /// HTTP client
-  pub client: http::client::Client,
+  pub client: client::Client,
 }
 
 /// ## VpnKit Error

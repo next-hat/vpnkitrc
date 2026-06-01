@@ -7,7 +7,7 @@ async fn main() -> std::io::Result<()> {
   let home = std::env::var("HOME").unwrap();
   let path = format!("{home}/.docker/desktop/vpnkit.port.sock");
   println!("Connecting to {}", path);
-  let client = VpnKitRc::connect_uds(&path);
+  let client = VpnKitRc::connect_uds(&path).await;
   let ports = client.list().await?;
   println!("Ports: {:?}", ports);
   let port = VpnKitPort {

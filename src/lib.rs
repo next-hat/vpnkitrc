@@ -1,5 +1,6 @@
 use ntex::rt;
-use ntex::http;
+use ntex::client;
+use ntex::ServiceFactory;
 
 pub mod stubs;
 
@@ -11,20 +12,26 @@ impl VpnKitRc {
   ///
   /// Create a new client based on unix socket
   ///
-  pub fn connect_uds(path: &str) -> Self {
+  pub async fn connect_uds(path: &str) -> Self {
     let path = path.to_owned();
-    let client = http::client::Client::build()
-      .connector(
-        http::client::Connector::default()
-          .connector(ntex::service::fn_service(move |_| {
+    let client = client::Client::builder()
+      .connector::<&str>(
+        client::Connector::default().connector(
+          ntex::service::fn_service(move |_| {
             let path = path.trim_start_matches("unix://").to_string();
-            async move { Ok(rt::unix_connect(path).await?) }
-          }))
-          .timeout(ntex::time::Millis::from_secs(100))
-          .finish(),
+            async move {
+              Ok(rt::unix_connect(path, ntex::SharedCfg::default()).await?)
+            }
+          })
+          .map_init_err(|_| {
+            std::io::Error::other("failed to initialize unix connector service")
+          }),
+        ),
       )
-      .timeout(ntex::time::Millis::from_secs(100))
-      .finish();
+      .response_timeout(ntex::time::Millis::from_secs(100))
+      .build(ntex::SharedCfg::default())
+      .await
+      .unwrap();
     VpnKitRc {
       client,
       base_url: "http://localhost".into(),
@@ -41,13 +48,12 @@ impl VpnKitRc {
       .get(format!("{}/forwards/list", self.base_url))
       .send()
       .await
-      .map_err(|err| {
-        std::io::Error::new(std::io::ErrorKind::Other, err.to_string())
-      })?;
+      .map_err(|err| std::io::Error::other(err.to_string()))?;
     Self::is_api_error(&mut res).await?;
-    let data = res.json::<Vec<VpnKitPort>>().await.map_err(|err| {
-      std::io::Error::new(std::io::ErrorKind::Other, err.to_string())
-    })?;
+    let data = res
+      .json::<Vec<VpnKitPort>>()
+      .await
+      .map_err(|err| std::io::Error::other(err.to_string()))?;
     Ok(data)
   }
 
@@ -61,16 +67,14 @@ impl VpnKitRc {
       .get(format!("{}/forwards/dump", self.base_url))
       .send()
       .await
-      .map_err(|err| {
-        std::io::Error::new(std::io::ErrorKind::Other, err.to_string())
-      })?;
+      .map_err(|err| std::io::Error::other(err.to_string()))?;
     Self::is_api_error(&mut res).await?;
-    let data = res.body().await.map_err(|err| {
-      std::io::Error::new(std::io::ErrorKind::Other, err.to_string())
-    })?;
-    let data = String::from_utf8(data.to_vec()).map_err(|err| {
-      std::io::Error::new(std::io::ErrorKind::Other, err.to_string())
-    })?;
+    let data = res
+      .body()
+      .await
+      .map_err(|err| std::io::Error::other(err.to_string()))?;
+    let data = String::from_utf8(data.to_vec())
+      .map_err(|err| std::io::Error::other(err.to_string()))?;
     Ok(data)
   }
 
@@ -84,9 +88,7 @@ impl VpnKitRc {
       .put(format!("{}/forwards/expose/port", self.base_url))
       .send_json(port)
       .await
-      .map_err(|err| {
-        std::io::Error::new(std::io::ErrorKind::Other, err.to_string())
-      })?;
+      .map_err(|err| std::io::Error::other(err.to_string()))?;
     Self::is_api_error(&mut res).await?;
     Ok(())
   }
@@ -101,9 +103,7 @@ impl VpnKitRc {
       .delete(format!("{}/forwards/unexpose/port", self.base_url))
       .send_json(port)
       .await
-      .map_err(|err| {
-        std::io::Error::new(std::io::ErrorKind::Other, err.to_string())
-      })?;
+      .map_err(|err| std::io::Error::other(err.to_string()))?;
     Self::is_api_error(&mut res).await?;
     Ok(())
   }
@@ -121,9 +121,7 @@ impl VpnKitRc {
       .put(format!("{}/forwards/expose/pipe", self.base_url))
       .send_json(port)
       .await
-      .map_err(|err| {
-        std::io::Error::new(std::io::ErrorKind::Other, err.to_string())
-      })?;
+      .map_err(|err| std::io::Error::other(err.to_string()))?;
     Self::is_api_error(&mut res).await?;
     Ok(())
   }
@@ -141,9 +139,7 @@ impl VpnKitRc {
       .delete(format!("{}/forwards/unexpose/pipe", self.base_url))
       .send_json(port)
       .await
-      .map_err(|err| {
-        std::io::Error::new(std::io::ErrorKind::Other, err.to_string())
-      })?;
+      .map_err(|err| std::io::Error::other(err.to_string()))?;
     Self::is_api_error(&mut res).await?;
     Ok(())
   }
@@ -154,14 +150,15 @@ impl VpnKitRc {
   /// This function is used internally to check if the response is an API error
   ///
   async fn is_api_error(
-    res: &mut http::client::ClientResponse,
+    res: &mut client::ClientResponse,
   ) -> std::io::Result<()> {
     let status = res.status();
     if status.is_client_error() || status.is_server_error() {
-      let err = res.json::<VpnKitError>().await.map_err(|err| {
-        std::io::Error::new(std::io::ErrorKind::Other, err.to_string())
-      })?;
-      return Err(std::io::Error::new(std::io::ErrorKind::Other, err.message));
+      let err = res
+        .json::<VpnKitError>()
+        .await
+        .map_err(|err| std::io::Error::other(err.to_string()))?;
+      return Err(std::io::Error::other(err.message));
     }
     Ok(())
   }
@@ -183,9 +180,9 @@ mod tests {
   ///
   /// Generate a client for testing
   ///
-  fn gen_client() -> super::VpnKitRc {
+  async fn gen_client() -> super::VpnKitRc {
     let socket_path = get_socket_path();
-    super::VpnKitRc::connect_uds(&socket_path)
+    super::VpnKitRc::connect_uds(&socket_path).await
   }
 
   /// ## Test list
@@ -194,7 +191,7 @@ mod tests {
   ///
   #[ntex::test]
   async fn test_list() {
-    let client = gen_client();
+    let client = gen_client().await;
     let res = client.list().await;
     assert!(res.is_ok());
   }
@@ -205,7 +202,7 @@ mod tests {
   ///
   #[ntex::test]
   async fn test_dump_state() {
-    let client = gen_client();
+    let client = gen_client().await;
     let res = client.dump_state().await;
     assert!(res.is_ok());
   }
@@ -216,7 +213,7 @@ mod tests {
   ///
   #[ntex::test]
   async fn test_basic() {
-    let client = gen_client();
+    let client = gen_client().await;
     // Test TCP
     let port = super::VpnKitPort {
       in_port: Some(8081),
